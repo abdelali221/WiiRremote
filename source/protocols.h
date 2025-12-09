@@ -11,7 +11,7 @@ enum protocols {
     LG,
     SAMSUNG32,
     SAMSUNG48
-}
+};
 
 #define KASEIKYO_VENDOR_ID_PARITY_BITS   4
 #define PANASONIC_VENDOR_ID_CODE    0x2002
@@ -19,7 +19,7 @@ enum protocols {
 #define LG_COMMAND_BITS         16
 #define LG_CHECKSUM_BITS         4
 
-typedef struct
+typedef struct _IR_data
 {
 	char name[8];
     u8 protocol;
