@@ -17,12 +17,12 @@ void sendnec(IR_data IR) {
 	
 	for (u8 i = 0; i < 16; i++)
 	{
-		sendbit(((IR.command >> i) & 1) ? 0 : 1);
+		sendbit(((IR.address >> i) & 1) ? 0 : 1);
 	}
 
-	for (u8 i = 0; i < 16; i++)
+    for (u8 i = 0; i < 16; i++)
 	{
-		sendbit(((IR.address >> i) & 1) ? 0 : 1);
+		sendbit(((IR.command >> i) & 1) ? 0 : 1);
 	}
 
 	for (size_t i = 0; i < 22; i++)
