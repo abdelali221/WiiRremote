@@ -5,6 +5,7 @@ Use your Wii sensor bar as a remote control!
 # How to use :
 
 The app requires a code file (codes.dat) which you neeed to create using the tool I provided (DATEditor).
+
 DATEditor is currently only available for Windows.
 
 Note: The app (for now) can only transmit the codes with the NEC protocol, so make sure to verify that your device uses that before starting to complain.
