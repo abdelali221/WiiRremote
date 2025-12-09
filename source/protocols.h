@@ -5,6 +5,13 @@
 #include <stdlib.h>
 #include <gccore.h>
 
+enum protocols {
+    NEC,
+    KASEIKYO,
+    LG,
+    SAMSUNG32,
+    SAMSUNG48
+}
 
 #define KASEIKYO_VENDOR_ID_PARITY_BITS   4
 #define PANASONIC_VENDOR_ID_CODE    0x2002
@@ -14,9 +21,10 @@
 
 typedef struct
 {
-	char hdr[8];
-	vu16 address;
-	vu16 command;
+	char name[8];
+    u8 protocol;
+	u32 address;
+	u32 command;
 } IR_data;
 
 void sendnec(IR_data IR);
