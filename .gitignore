@@ -5,3 +5,5 @@ DATEditor/.vscode/launch.json
 DATEditor/host.exe
 DATEditor/main.o
 DATEditor/codes.dat
+WiiRremote.zip
+apps/WiiRremote/boot.dol

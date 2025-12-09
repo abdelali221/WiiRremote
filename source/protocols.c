@@ -129,3 +129,16 @@ void sendlg(IR_data *IR) {
 	
 }
 */
+
+void getprotocolandsend(IR_data IR) {
+    switch (IR.protocol)
+    {
+        case NEC:
+            sendnec(IR);
+        break;
+    
+        default:
+        break;
+    }
+    
+}

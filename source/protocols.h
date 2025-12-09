@@ -27,6 +27,6 @@ typedef struct _IR_data
 	u32 command;
 } IR_data;
 
-void sendnec(IR_data IR);
+void getprotocolandsend(IR_data IR);
 
 #endif
