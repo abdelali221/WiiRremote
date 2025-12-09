@@ -1,3 +1,7 @@
 WiiRremote.dol
 WiiRremote.elf
 build/*.*
+DATEditor/.vscode/launch.json
+DATEditor/host.exe
+DATEditor/main.o
+DATEditor/codes.dat

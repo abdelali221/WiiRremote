@@ -10,139 +10,12 @@
 
 #define VER "v0.1"
 
-#define KASEIKYO_VENDOR_ID_PARITY_BITS   4
-#define PANASONIC_VENDOR_ID_CODE    0x2002
-
-#define LG_COMMAND_BITS         16
-#define LG_CHECKSUM_BITS         4
-
-
 const char *str = "Abdelali221\n";
 
 extern void usleep(u32 s);
 static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
 
-
-/*
-void sendpanasonic(IR_data *IR) {
-	l_0 = 9;
-	s_0 = 9 * 2 * 25;
-	l_1 = 9;
-	s_1 = 9 * 25;
-
-	u8 tdata[6] = {0};
-
-	tdata[0] = (u8)(PANASONIC_VENDOR_ID_CODE & 0xFF);
-	tdata[1] = (u8)(PANASONIC_VENDOR_ID_CODE >> 8);
-	uint8_t tVendorParity = PANASONIC_VENDOR_ID_CODE ^ (PANASONIC_VENDOR_ID_CODE>> 8);
-    tVendorParity = (tVendorParity ^ (tVendorParity >> 4)) & 0xF;
-
-	tdata[2] = (u8)(((IR->address << KASEIKYO_VENDOR_ID_PARITY_BITS) | tVendorParity) && 0xFF);
-	tdata[3] = (u8)(((IR->address << KASEIKYO_VENDOR_ID_PARITY_BITS) | tVendorParity) >> 8);
-
-	tdata[4] = (u8)IR->command;
-	tdata[5] = tdata[4] ^ tdata[2] ^ tdata[3];
-
-	printf("Binary Sequence : \n");
-	printf(" tdata : ");
-	for (size_t j = 0; j < 5; j++)
-	{
-		for (size_t i = 0; i < 8; i++)
-		{
-			printf("%d", ((tdata[j] >> i) & 1));
-		}
-		printf("\n         ");
-	}
-
-	for (size_t i = 0; i < 69; i++)
-	{
-		pwmir(true, false, PULSE_TIME, 50);
-	}
-
-	usleep(2400);
-	for (size_t j = 0; j < 6; j++) {
-		for (size_t i = 0; i < 8; i++)
-		{
-			sendbit(((tdata[j] >> i) & 1));
-		}
-	}
-}
-
-uint32_t computeLGRawDataAndChecksum(uint8_t aAddress, uint16_t aCommand) {
-    uint32_t tRawData = ((uint32_t) aAddress << (LG_COMMAND_BITS + LG_CHECKSUM_BITS)) | ((uint32_t) aCommand << LG_CHECKSUM_BITS);
-    /*
-     * My guess of the 4 bit checksum
-     * Addition of all 4 nibbles of the 16 bit command
-     *//*
-    uint8_t tChecksum = 0;
-    uint16_t tTempForChecksum = aCommand;
-    for (int i = 0; i < 4; ++i) {
-        tChecksum += tTempForChecksum & 0xF; // add low nibble
-        tTempForChecksum >>= 4; // shift by a nibble
-    }
-    return (tRawData | (tChecksum & 0xF));
-}
-
-
-void sendlg(IR_data *IR) {
-	l_0 = 11; // 11 * 50 = 550
-	s_0 = 21 * 3 * 25; // 33 * 50 =
-	l_1 = 11;
-	s_1 = 21 * 25;
-
-
-	u32 data = 0xE0E019E6;
-
-	printf("\n ADDR : ");
-	for (size_t i = 0; i < 15; i++)
-	{
-		printf("%d", ((IR->address >> i) & 1));
-		
-	}
-	printf("\n CMD : ");
-	for (size_t i = 0; i < 15; i++)
-	{
-		printf("%d", ((IR->command >> i) & 1));
-		
-	}
-	for (size_t i = 0; i < 190; i++)
-	{
-		pwmir(true, false, PULSE_TIME, 50);
-	}
-	
-	usleep(4500);
-
-	for (size_t i = 0; i < 28; i++)
-	{
-		sendbit((data >> (27 - i)) & 1);		
-	}
-
-	for (size_t i = 0; i < 22; i++)
-	{
-		pwmir(true, false, PULSE_TIME, 50);
-	}
-	
-}
-
-void sendrs232(u8 d) {
-	l_1 = 1333;
-	s_1 = 0;
-	for (size_t i = 0; i < 1333; i++)
-	{
-		pwmir(true, false, PULSE_TIME, 50);
-	}
-	for (size_t i = 0; i < 8; i++)
-	{
-		sendbit((d >> i) & 1);
-	}
-	for (size_t i = 0; i < 1333; i++)
-	{
-		pwmir(false, false, PULSE_TIME, 50);
-	}
-
-}
-*/
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //---------------------------------------------------------------------------------
@@ -215,11 +88,23 @@ int main(int argc, char **argv) {
 
 	fread(&numofcodes, 4, 1, code);
 
+	fseek(code, 0, SEEK_END);
+    long size = ftell(code);
+
+	if((size - 4) != numofcodes * sizeof(IR_data)) {
+		printf("File size mismatch!!\n Expected %d / Actual %ld", (numofcodes * sizeof(IR_data)) + 4, size);
+		fclose(code);
+		usleep(2000000);
+		exit(0);
+	}
+
 	if(numofcodes == 0) {
 		printf("No codes are available or file is corrupt!");
 		fclose(code);
 		exit(0);
 	}
+
+	fseek(code, 4, SEEK_SET);
 
 	printf("%d codes are available.", numofcodes);
 
