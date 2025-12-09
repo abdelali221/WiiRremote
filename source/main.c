@@ -4,6 +4,10 @@
 #include <wiiuse/wpad.h>
 #include <ogc/machine/processor.h>
 #include <ogc/lwp_watchdog.h>
+#include <fat.h>
+#include "WiiVT.h"
+
+#define VER "v0.1"
 
 #define KASEIKYO_VENDOR_ID_PARITY_BITS   4
 #define PANASONIC_VENDOR_ID_CODE    0x2002
@@ -11,13 +15,13 @@
 #define LG_COMMAND_BITS         16
 #define LG_CHECKSUM_BITS         4
 
-u32 PULSE_TIME = 26399;
+u32 PULSE_TIME = 26399; // Around 38KHz
 
 typedef struct
 {
-	u16 hdr;
-	u16 address;
-	u16 command;
+	char hdr[8];
+	vu16 address;
+	vu16 command;
 } IR_data;
 
 const char *str = "Abdelali221\n";
@@ -26,9 +30,6 @@ const char *str = "Abdelali221\n";
 extern void usleep(u32 s);
 static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
-
-#define		HW_REG_BASE		0xd800000
-#define		HW_GPIO1OUT		(HW_REG_BASE + 0x0e0)
 
 static vu32* const _ipcReg = (u32*)0xCD000000;	
 
@@ -89,44 +90,31 @@ void sendbit(bool bit) {
 	}
 }
 
-void sendnec(IR_data *IR) {
+void sendnec(IR_data IR) {
 	l_0 = 11; // 11 * 50 = 550
 	s_0 = 21 * 3 * 25; // 33 * 50 =
 	l_1 = 11;
 	s_1 = 21 * 25;
 
-	printf("\n ADDR : ");
-	for (size_t i = 0; i < 16; i++)
-	{
-		printf("%d", ((IR->address >> i) & 1));
-		
-	}
-	printf("\n CMD : ");
-	for (size_t i = 0; i < 16; i++)
-	{
-		printf("%d", ((IR->command >> i) & 1));
-		
-	}
-	for (size_t i = 0; i < 166; i++)
+	printf(" ADDR : %x", IR.address );
+	printf(" CMD : %x", IR.command);
+
+	for (size_t i = 0; i < 165; i++)
 	{
 		pwmir(true, false, PULSE_TIME, 50);
 	}
 	usleep(4500);
 
-	for (size_t i = 0; i < 16; i++)
+
+	for (u8 i = 0; i < 16; i++)
 	{
-		sendbit((IR->address >> i) & 1);		
+		sendbit(((IR.command >> i) & 1) ? 0 : 1);
 	}
 
-	for (size_t i = 0; i < 8; i++)
+	for (u8 i = 0; i < 16; i++)
 	{
-		sendbit((IR->command >> i) & 1);
+		sendbit(((IR.address >> i) & 1) ? 0 : 1);
 	}
-
-	for (size_t i = 0; i < 8; i++)
-	{
-		sendbit(1 - ((IR->command >> i) & 1));
-	}	
 
 	for (size_t i = 0; i < 22; i++)
 	{
@@ -134,7 +122,7 @@ void sendnec(IR_data *IR) {
 	}
 	
 }
-
+/*
 void sendpanasonic(IR_data *IR) {
 	l_0 = 9;
 	s_0 = 9 * 2 * 25;
@@ -184,7 +172,7 @@ uint32_t computeLGRawDataAndChecksum(uint8_t aAddress, uint16_t aCommand) {
     /*
      * My guess of the 4 bit checksum
      * Addition of all 4 nibbles of the 16 bit command
-     */
+     *//*
     uint8_t tChecksum = 0;
     uint16_t tTempForChecksum = aCommand;
     for (int i = 0; i < 4; ++i) {
@@ -252,6 +240,7 @@ void sendrs232(u8 d) {
 	}
 
 }
+*/
 //---------------------------------------------------------------------------------
 int main(int argc, char **argv) {
 //---------------------------------------------------------------------------------
@@ -299,47 +288,85 @@ int main(int argc, char **argv) {
 	// e.g. printf ("\x1b[%d;%dH", row, column );
 	printf("\x1b[2;0H");
 
-	printf("WiiR by Abdelali221");
+	printf(" WiiRremote %s\n Created by Abdelali221", VER);
 
-	IR_data IR1;
+	printf("\n Initializing storage device...");
 
-	IR1.hdr = PANASONIC_VENDOR_ID_CODE;
-	IR1.address = 0x02FE;
-	IR1.command = 0xDC23;
+	fatInitDefault();
 
+	printf("Done.");
+
+	printf("\n Opening code file...");
+
+	FILE* code = fopen("codes.dat", "rb");
+
+	if(!code) {
+		printf("FAILED!\n Make sure you have it in the /app/WiiRremote/ folder");
+		exit(0);
+	}
+
+	printf("Done.");
+
+	printf("\n Reading the file header...");
+
+	u32 numofcodes = 0;
+
+	fread(&numofcodes, 4, 1, code);
+
+	if(numofcodes == 0) {
+		printf("No codes are available or file is corrupt!");
+		fclose(code);
+		exit(0);
+	}
+
+	printf("%d codes are available.", numofcodes);
+
+	IR_data* IR_codes = calloc(numofcodes, sizeof(IR_data));
+
+	fread(IR_codes, sizeof(IR_data), numofcodes, code);
+
+	fclose(code);
+
+	usleep(2000000);
+	ClearScreen();
+	u32 currentcode = 0;
+	POSCursor(25, 4);
+	printf("Using Code %d", currentcode);
 	while(1) {
-		
-
 		// Call WPAD_ScanPads each loop, this reads the latest controller states
 		WPAD_ScanPads();
 
 		// WPAD_ButtonsDown tells us which buttons were pressed in this loop
 		// this is a "one shot" state which will not fire again until the button has been released
-		u32 pressed = WPAD_ButtonsHeld(0);
+		u32 pressed = WPAD_ButtonsDown(0);
 
 		// We return to the launcher application via exit
-		if ( pressed & WPAD_BUTTON_HOME ) exit(0);
+		if ( pressed & WPAD_BUTTON_HOME ) break;
 
 		if ( pressed & WPAD_BUTTON_A ) { 
-			sendnec(&IR1);
-			printf("Sent data!\n");
-			usleep(200000);
-		}
-		if ( pressed & WPAD_BUTTON_B ) { 
-			sendpanasonic(&IR1);
-			printf("Sent data!\n");
-			usleep(200000);
+			POSCursor(20, 6);
+			sendnec(IR_codes[currentcode]);
+			POSCursor(20, 7);
+			printf("Sent data! %d", currentcode);
+			usleep(1000000);
+			ClearScreen();
+			POSCursor(25, 4);
+			printf("Using Code %d ", currentcode);
 		}
 
 		if ( pressed & WPAD_BUTTON_PLUS ) { 
-			sendlg(&IR1);
-			
-			printf("Sent data!\n");
-			usleep(200000);
+			if (currentcode < numofcodes - 1) currentcode++;
+			POSCursor(25, 4);
+			printf("Using Code %d ", currentcode);
 		}
 
+		if ( pressed & WPAD_BUTTON_MINUS ) { 
+			if (0 < currentcode) currentcode--;
+			POSCursor(25, 4);
+			printf("Using Code %d ", currentcode);
+		}
 		
 	}
-
+	free(IR_codes);
 	return 0;
 }
