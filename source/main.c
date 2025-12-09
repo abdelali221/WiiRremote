@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <gccore.h>
 #include <wiiuse/wpad.h>
-#include <ogc/machine/processor.h>
-#include <ogc/lwp_watchdog.h>
 #include <fat.h>
+
 #include "WiiVT.h"
+#include "IR.h"
+#include "protocols.h"
 
 #define VER "v0.1"
 
@@ -15,113 +16,14 @@
 #define LG_COMMAND_BITS         16
 #define LG_CHECKSUM_BITS         4
 
-u32 PULSE_TIME = 26399; // Around 38KHz
-
-typedef struct
-{
-	char hdr[8];
-	vu16 address;
-	vu16 command;
-} IR_data;
 
 const char *str = "Abdelali221\n";
-
 
 extern void usleep(u32 s);
 static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
 
-static vu32* const _ipcReg = (u32*)0xCD000000;	
 
-u32 ACR_ReadReg(u32 reg)
-{
-	return _ipcReg[reg>>2];
-}
-
-void ACR_WriteReg(u32 reg,u32 val)
-{
-	_ipcReg[reg>>2] = val;
-}
-
-void toggleirbar(bool enable) {
-	u32 val;
-	u32 level;
-
-	level = IRQ_Disable();
-	val = (ACR_ReadReg(0xc0)&~0x100);
-	if(enable) val |= 0x100;
-	ACR_WriteReg(0xc0,val);
-	IRQ_Restore(level);
-}
-
-void pwmir(bool start, bool end, u32 time, u8 width) {
-	struct timespec req = {0};
-    struct timespec rem;
-
-	req.tv_nsec = time - ((time*width)/100);
-	toggleirbar(start);
-	nanosleep(&req, &rem);
-	toggleirbar(end);
-	req.tv_nsec = time + ((time*width)/100);
-	nanosleep(&req, &rem);
-}
-
-u16 l_0 = 24; //Length
-u16 l_1 = 48;
-u16 pd_0 = 100; // duty-cycle
-u16 pd_1 = 100;
-u16 s_0 = 0;
-u16 s_1 = 0;
-
-void sendbit(bool bit) {
-	if (bit) {
-		for (size_t i = 0; i < l_1; i++)
-		{
-			pwmir(true, false, PULSE_TIME, 50);
-		}
-		usleep(s_1);
-
-	} else {
-		for (size_t i = 0; i < l_0; i++)
-		{
-			pwmir(true, false, PULSE_TIME, 50);
-		}
-		usleep(s_0);
-	}
-}
-
-void sendnec(IR_data IR) {
-	l_0 = 11; // 11 * 50 = 550
-	s_0 = 21 * 3 * 25; // 33 * 50 =
-	l_1 = 11;
-	s_1 = 21 * 25;
-
-	printf(" ADDR : %x", IR.address );
-	printf(" CMD : %x", IR.command);
-
-	for (size_t i = 0; i < 165; i++)
-	{
-		pwmir(true, false, PULSE_TIME, 50);
-	}
-	usleep(4500);
-
-
-	for (u8 i = 0; i < 16; i++)
-	{
-		sendbit(((IR.command >> i) & 1) ? 0 : 1);
-	}
-
-	for (u8 i = 0; i < 16; i++)
-	{
-		sendbit(((IR.address >> i) & 1) ? 0 : 1);
-	}
-
-	for (size_t i = 0; i < 22; i++)
-	{
-		pwmir(true, false, PULSE_TIME, 50);
-	}
-	
-}
 /*
 void sendpanasonic(IR_data *IR) {
 	l_0 = 9;

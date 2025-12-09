@@ -1,7 +1,3 @@
 WiiRremote.dol
 WiiRremote.elf
-build/main.d
-build/main.o
-build/WiiRremote.elf.map
-build/WiiVT.d
-build/WiiVT.o
+build/*.*
