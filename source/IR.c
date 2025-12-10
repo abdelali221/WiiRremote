@@ -18,7 +18,7 @@ void ACR_WriteReg(u32 reg,u32 val)
 	_ipcReg[reg>>2] = val;
 }
 
-void toggleirbar(bool enable) {
+void ENABLE_IR(bool enable) {
 	u32 val;
 	u32 level;
 
@@ -29,14 +29,14 @@ void toggleirbar(bool enable) {
 	IRQ_Restore(level);
 }
 
-void pwmir(bool start, bool end, u32 time, u8 width) {
+void PWM_IR(bool start, bool end, u32 time, u8 width) {
 	struct timespec req = {0};
     struct timespec rem;
 
 	req.tv_nsec = time - ((time*width)/100);
-	toggleirbar(start);
+	ENABLE_IR(start);
 	nanosleep(&req, &rem);
-	toggleirbar(end);
+	ENABLE_IR(end);
 	req.tv_nsec = time + ((time*width)/100);
 	nanosleep(&req, &rem);
 }
@@ -49,11 +49,11 @@ u16 dutycycle_1 = 50;
 u16 sleep_0 = 0;
 u16 sleep_1 = 0;
 
-void setpulsetime(u32 t) {
+void SET_PULSE_TIME(u32 t) {
     PULSE_TIME = t;
 }
 
-void setsettings(u16 l_0, u16 l_1, u16 s_0, u16 s_1, u16 dc_0, u16 dc_1) {
+void SET_SETTINGS(u16 l_0, u16 l_1, u16 s_0, u16 s_1, u16 dc_0, u16 dc_1) {
     length_0 = l_0;
     length_1 = l_1;
     sleep_0 = s_0;
@@ -62,18 +62,18 @@ void setsettings(u16 l_0, u16 l_1, u16 s_0, u16 s_1, u16 dc_0, u16 dc_1) {
     dutycycle_1 = dc_1;
 }
 
-void sendbit(bool bit) {
+void SEND_BIT(bool bit) {
 	if (bit) {
 		for (size_t i = 0; i < length_1; i++)
 		{
-			pwmir(true, false, PULSE_TIME, dutycycle_1);
+			PWM_IR(true, false, PULSE_TIME, dutycycle_1);
 		}
 		usleep(sleep_1);
 
 	} else {
 		for (size_t i = 0; i < length_0; i++)
 		{
-			pwmir(true, false, PULSE_TIME, dutycycle_0);
+			PWM_IR(true, false, PULSE_TIME, dutycycle_0);
 		}
 		usleep(sleep_0);
 	}

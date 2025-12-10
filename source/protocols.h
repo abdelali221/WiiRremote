@@ -10,7 +10,8 @@ enum protocols {
     KASEIKYO,
     LG,
     SAMSUNG32,
-    SAMSUNG48
+    SAMSUNG48,
+    PANASONIC
 };
 
 #define KASEIKYO_VENDOR_ID_PARITY_BITS   4
