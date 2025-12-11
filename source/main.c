@@ -8,7 +8,7 @@
 #include "IR.h"
 #include "protocols.h"
 
-#define VER "v0.2"
+#define VER "v0.3"
 
 const char *str = "Abdelali221\n";
 
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 	usleep(2000000);
 	ClearScreen();
 	u32 currentcode = 0;
-	PRINT_CODE_INFO(IR_codes, currentcode);
+	PRINT_CODE_INFO(&IR_codes[currentcode], currentcode);
 	while(1) {
 		// Call WPAD_ScanPads each loop, this reads the latest controller states
 		WPAD_ScanPads();
@@ -128,17 +128,19 @@ int main(int argc, char **argv) {
 			printf("Sent data! ");
 			usleep(1000000);
 			ClearScreen();
-			PRINT_CODE_INFO(IR_codes, currentcode);
+			PRINT_CODE_INFO(&IR_codes[currentcode], currentcode);
 		}
 
 		if ( pressed & WPAD_BUTTON_PLUS ) { 
 			if (currentcode < numofcodes - 1) currentcode++;
-			PRINT_CODE_INFO(IR_codes, currentcode);
+			ClearScreen();
+			PRINT_CODE_INFO(&IR_codes[currentcode], currentcode);
 		}
 
 		if ( pressed & WPAD_BUTTON_MINUS ) { 
 			if (0 < currentcode) currentcode--;
-			PRINT_CODE_INFO(IR_codes, currentcode);
+			ClearScreen();
+			PRINT_CODE_INFO(&IR_codes[currentcode], currentcode);
 		}
 		
 	}
