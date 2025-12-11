@@ -11,15 +11,36 @@ void SEND_NEC(IR_data IR) {
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
 	usleep(4500);
-	
-	for (u8 i = 0; i < 16; i++)
-	{
-		SEND_BIT(((IR.address >> i) & 1) ? 0 : 1);
+	if (IR.address < 0x100) {
+		for (u8 i = 0; i < 8; i++)
+		{
+			SEND_BIT(((IR.address >> i) & 1) ? 0 : 1);
+		}
+		for (u8 i = 0; i < 8; i++)
+		{
+			SEND_BIT(((IR.address >> i) & 1) ? 1 : 0);
+		}
+	} else {
+		for (u8 i = 0; i < 16; i++)
+		{
+			SEND_BIT(((IR.address >> i) & 1) ? 0 : 1);
+		}
 	}
 
-    for (u8 i = 0; i < 16; i++)
-	{
-		SEND_BIT(((IR.command >> i) & 1) ? 0 : 1);
+    if (IR.command < 0x100) {
+		for (u8 i = 0; i < 8; i++)
+		{
+			SEND_BIT(((IR.command >> i) & 1) ? 0 : 1);
+		}
+		for (u8 i = 0; i < 8; i++)
+		{
+			SEND_BIT(((IR.command >> i) & 1) ? 1 : 0);
+		}
+	} else {
+		for (u8 i = 0; i < 16; i++)
+		{
+			SEND_BIT(((IR.command >> i) & 1) ? 0 : 1);
+		}
 	}
 
 	for (size_t i = 0; i < 22; i++)
