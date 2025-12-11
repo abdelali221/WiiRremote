@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <windows.h>
 
-#define VER "v0.1"
+#define VER "v0.2"
 
 void POSCursor(uint8_t X, uint8_t Y) {
 	printf("\x1b[%d;%dH", Y, X);
@@ -28,7 +28,8 @@ enum protocols {
     KASEIKYO,
     LG,
     SAMSUNG32,
-    SAMSUNG48
+    SAMSUNG48,
+    PANASONIC
 };
 
 uint32_t swap_endian_32(uint32_t val) {
@@ -49,6 +50,8 @@ int protocolnametonum(char* protocol) {
         return SAMSUNG32;
     } else if(!strcmp(protocol, "SAMSUNG48")) {
         return SAMSUNG48;
+    }else if(!strcmp(protocol, "PANASONIC")) {
+        return PANASONIC;
     }
     return -1;
 }
@@ -74,6 +77,10 @@ char* numtoprotocolname(int n) {
         case SAMSUNG48:
             return "SAMSUNG48";
         break;
+
+        case PANASONIC:
+            return "PANASONIC";
+        break;
         
         default:
             return "UNKNOWN";
@@ -82,18 +89,14 @@ char* numtoprotocolname(int n) {
 }
 
 void printhelp(const char* filename) {
-    printf("\n\nUsage : %s (""PATH_TO_CODES.DAT"" or -c) Arguments\n", filename);
-    printf("\n -+ : Add a code (Needs to be followed by -N, -P, -A and -C)");
-    printf("\n -R : Read the file (use only if a proper path was given) ");
-    printf("\n -N : Name of the code");
-    printf("\n -P : Protocol (NEC, KASEIKYO, LG, SAMSUNG32, SAMSUNG48)");
-    printf("\n -A : Address of IR signal");
-    printf("\n -C : Command of IR signal\n");
+    printf("\n\n Usage : %s (\"PATH_TO_CODES.DAT\" or -C) Arguments\n", filename);
+    printf("\n  -A : Add a code");
+    printf("\n  -R : Read the file (use only if a proper path was given)\n");
 }
 
 void printaddhelp(const char* filename) {
-    printf("\nPlease follow the following example when adding a code :\n");
-    printf("%s codes.dat -+ -N POWER -P NEC -A 0xFFFF -C 0xFFFF", filename);
+    printf("\n\n Please follow this structure when adding a code :\n");
+    printf(" %s \"FILEPATH\" -A (NAME) (PROTOCOL) (ADDRESS) (CODE)\n", filename);
 }
 
 int main(int argc, char *argv[])
@@ -103,7 +106,7 @@ int main(int argc, char *argv[])
     printf("\n====== WiiRremote codes.dat editor ======");
     printf("\n======== Created by Abdelali221 =========");
 
-    printf("\n\nVer : %s", VER);
+    printf("\n\n Ver : %s", VER);
 
     if(argc < 2) {
         printhelp(argv[0]);
@@ -111,14 +114,14 @@ int main(int argc, char *argv[])
     }
     FILE* code;
     uint32_t numofcodes = 0;
-    if(!strcmp(argv[1], "-c")) {
-        printf("\nCreating file...");
+    if(!strcmp(argv[1], "-C")) {
+        printf("\n Creating file...");
         code = fopen("codes.dat", "wb");
         fwrite(&numofcodes, 4, 1, code);
         printf("Success!");
         return 0;
     } else {
-        printf("\nOpening file...");
+        printf("\n Opening file...");
         code = fopen(argv[1], "rb+");
     }
 
@@ -127,59 +130,73 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    printf("Success!");
+    printf("Success!\n");
 
-    printf("\n\n Reading the file header...");
-    fseek(code, 0, SEEK_SET);
-    fread(&numofcodes, 4, 1, code);
+    if (argc < 3) {
+        printf("\n Please provide an operation to be done.");
+        printhelp(argv[0]);
+        fclose(code);
+        return -1;
+    }
 
-    numofcodes = swap_endian_32(numofcodes);
-    printf(" %d codes are available", numofcodes);
-
-    if (!strcmp(argv[2], "-+")) {
-        if(argc == 11) {
-            if(!strcmp(argv[3], "-N") && !strcmp(argv[5], "-P") && !strcmp(argv[7], "-A") && !strcmp(argv[9], "-C")) {
-                IR_data write = {0};
-                strcpy(write.name, argv[4]);
-                write.protocol = protocolnametonum(argv[6]);
-                write.address = strtol(argv[8], NULL, 0);
-                write.command = strtol(argv[10], NULL, 0);
-                printf("\n Name : %s", write.name);
-                printf("\n Protocol : %s", numtoprotocolname(write.protocol));
-                printf("\n Address : %x", write.address);
-                printf("\n Command : %x", write.command);
-                write.address = swap_endian_32(write.address);
-                write.command = swap_endian_32(write.command);
-                fseek(code, 0, SEEK_END);
-                size_t wrote = fwrite(&write, 1, sizeof(IR_data), code);
-                if(wrote != sizeof(write)) {
-                    printf("\nERROR! Wrote %d Expected %d\n", wrote, sizeof(write));
-                }
-                fseek(code, 0, SEEK_SET);
-                numofcodes++;
-                numofcodes = swap_endian_32(numofcodes);
-                fwrite(&numofcodes, 4, 1, code);
-                printf("\n Done.");
-            }
-        } else if (argc < 11) {
-            printf("Too Few Arguments.");
+    if (!strcmp(argv[2], "-A")) {
+        if(argc == 7) {
+            fseek(code, 0, SEEK_SET);
+            fread(&numofcodes, 4, 1, code);
+            numofcodes = swap_endian_32(numofcodes);
+            printf("\n Adding code :\n");
+            IR_data write = {0};
+            strcpy(write.name, argv[3]);
+            write.protocol = protocolnametonum(argv[4]);
+            write.address = strtol(argv[5], NULL, 0);
+            write.command = strtol(argv[6], NULL, 0);
+            printf("\n Name : %s", write.name);
+            printf("\n Protocol : %s", numtoprotocolname(write.protocol));
+            printf("\n Address : %x", write.address);
+            printf("\n Command : %x", write.command);
+            write.address = swap_endian_32(write.address);
+            write.command = swap_endian_32(write.command);
+            fseek(code, 0, SEEK_END);
+            fwrite(&write, 1, sizeof(IR_data), code);
+            fseek(code, 0, SEEK_SET);
+            numofcodes++;
+            numofcodes = swap_endian_32(numofcodes);
+            fwrite(&numofcodes, 4, 1, code);
+            printf("\n\n Done.");
+        } else if (argc < 7) {
+            printf("\n Too Few Arguments.");
             printaddhelp(argv[0]);
         } else {
-            printf("Too Many Arguments.");
+            printf("\n Too Many Arguments.");
             printaddhelp(argv[0]);
         }
-    } else if (!strcmp(argv[2], "-R") && numofcodes > 0) {
-        IR_data* code_array = calloc(sizeof(IR_data), numofcodes);
-        fread(code_array, sizeof(IR_data), numofcodes, code);
-        for (size_t i = 0; i < numofcodes; i++)
-        {
-            printf("\n Code %d", i);
-            printf("\n Name : %s", code_array[i].name);
-            printf("\n Protocol : %s", numtoprotocolname(code_array[i].protocol));
-            printf("\n Address : %x", swap_endian_32(code_array[i].address));
-            printf("\n Command : %x\n", swap_endian_32(code_array[i].command));
-        }        
     }
+    
+    if (!strcmp(argv[2], "-R")) {
+        printf("\n Reading the file header...");
+        fseek(code, 0, SEEK_SET);
+        fread(&numofcodes, 4, 1, code);
+
+        numofcodes = swap_endian_32(numofcodes);
+        if (strcmp(argv[1], "-C") && numofcodes > 0) {
+            printf(" %d codes are available\n", numofcodes);
+                IR_data* code_array = calloc(sizeof(IR_data), numofcodes);
+            fread(code_array, sizeof(IR_data), numofcodes, code);
+            for (size_t i = 0; i < numofcodes; i++)
+            {
+                printf("\n Code %d", i);
+                printf("\n Name : %s", code_array[i].name);
+                printf("\n Protocol : %s", numtoprotocolname(code_array[i].protocol));
+                printf("\n Address : %x", swap_endian_32(code_array[i].address));
+                printf("\n Command : %x\n", swap_endian_32(code_array[i].command));
+            } 
+        }
+        
+        if (numofcodes == 0) {
+            printf(" There are no codes to be read!");
+        }
+    }
+
     fclose(code);
     return 0;
 }
