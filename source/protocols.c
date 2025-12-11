@@ -4,7 +4,7 @@
 extern void usleep(u32 s);
 
 void SEND_NEC(IR_data IR) {
-	SET_SETTINGS(11, 11, 1575, 525, 50, 50);
+	SET_SETTINGS(11, 11, 1650, 550, 50, 50);
 
 	for (size_t i = 0; i < 165; i++)
 	{
@@ -43,7 +43,7 @@ void SEND_NEC(IR_data IR) {
 		}
 	}
 
-	for (size_t i = 0; i < 22; i++)
+	for (size_t i = 0; i < 11; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
