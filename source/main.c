@@ -8,13 +8,26 @@
 #include "IR.h"
 #include "protocols.h"
 
-#define VER "v0.1"
+#define VER "v0.2"
 
 const char *str = "Abdelali221\n";
 
 extern void usleep(u32 s);
 static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
+
+void PRINT_CODE_INFO(IR_data* IR, u32 currentcode) {
+	POSCursor(25, 4);
+	printf("Using Code %d", currentcode);
+	POSCursor(25, 6);
+	printf("Name : %s", IR->name);
+	POSCursor(25, 7);
+	printf("Protocol : %s", ID_TO_PROTOCOL_NAME(IR->protocol));
+	POSCursor(25, 8);
+	printf("Address : 0x%x", IR->address);
+	POSCursor(25, 9);
+	printf("Command : 0x%x", IR->command);
+}
 
 int main(int argc, char **argv) {
 
@@ -97,10 +110,7 @@ int main(int argc, char **argv) {
 	usleep(2000000);
 	ClearScreen();
 	u32 currentcode = 0;
-	POSCursor(25, 4);
-	printf("Using Code %d ", currentcode);
-	POSCursor(25, 6);
-	printf(" %s ", IR_codes[currentcode].name);
+	PRINT_CODE_INFO(IR_codes, currentcode);
 	while(1) {
 		// Call WPAD_ScanPads each loop, this reads the latest controller states
 		WPAD_ScanPads();
@@ -113,32 +123,22 @@ int main(int argc, char **argv) {
 		if ( pressed & WPAD_BUTTON_HOME ) break;
 
 		if ( pressed & WPAD_BUTTON_A ) { 
-			POSCursor(20, 6);
-			getprotocolandsend(IR_codes[currentcode]);
-			POSCursor(20, 7);
-			printf("Sent data! %d", currentcode);
+			GET_PROTOCOL_AND_SEND(IR_codes[currentcode]);
+			POSCursor(30, 10);
+			printf("Sent data! ");
 			usleep(1000000);
 			ClearScreen();
-			POSCursor(25, 4);
-			printf("Using Code %d ", currentcode);
-			POSCursor(25, 6);
-			printf(" %s ", IR_codes[currentcode].name);
+			PRINT_CODE_INFO(IR_codes, currentcode);
 		}
 
 		if ( pressed & WPAD_BUTTON_PLUS ) { 
 			if (currentcode < numofcodes - 1) currentcode++;
-			POSCursor(25, 4);
-			printf("Using Code %d ", currentcode);
-			POSCursor(25, 6);
-			printf(" %s ", IR_codes[currentcode].name);
+			PRINT_CODE_INFO(IR_codes, currentcode);
 		}
 
 		if ( pressed & WPAD_BUTTON_MINUS ) { 
 			if (0 < currentcode) currentcode--;
-			POSCursor(25, 4);
-			printf("Using Code %d ", currentcode);
-			POSCursor(25, 6);
-			printf(" %s ", IR_codes[currentcode].name);
+			PRINT_CODE_INFO(IR_codes, currentcode);
 		}
 		
 	}
