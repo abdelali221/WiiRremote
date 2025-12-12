@@ -8,7 +8,7 @@ The app requires a code file (codes.dat) which you neeed to create using the too
 
 DATEditor is currently only available for Windows.
 
-Note: The app (for now) can only transmit the codes with the NEC protocol, so make sure to verify that your device uses that before starting to complain.
+Make sure to use the correct protocol when creating a code.
 
 When you get the codes.dat file ready, put it in the same folder as the .dol file (generally apps/WiiRremote) and launch the app on your console.
 
