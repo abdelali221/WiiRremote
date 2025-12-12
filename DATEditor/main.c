@@ -9,7 +9,8 @@
 #include <stdint.h>
 #include <windows.h>
 
-#define VER "v0.2"
+#define VER "v0.3"
+#define NUM_OF_PROTOCOLS 6
 
 void POSCursor(uint8_t X, uint8_t Y) {
 	printf("\x1b[%d;%dH", Y, X);
@@ -32,6 +33,15 @@ enum protocols {
     PANASONIC
 };
 
+char *PROTOCOLS_NAMES[6] = {
+    "NEC",
+    "KASEIKYO",
+    "LG",
+    "SAMSUNG32",
+    "SAMSUNG48",
+    "PANASONIC\0"
+};
+
 uint32_t swap_endian_32(uint32_t val) {
     return ((val << 24) & 0xFF000000) |
            ((val << 8)  & 0x00FF0000) |
@@ -40,52 +50,16 @@ uint32_t swap_endian_32(uint32_t val) {
 }
 
 int protocolnametonum(char* protocol) {
-    if(!strcmp(protocol, "NEC")) {
-        return NEC;
-    } else if(!strcmp(protocol, "KASEIKYO")) {
-        return KASEIKYO;
-    } else if(!strcmp(protocol, "LG")) {
-        return LG;
-    } else if(!strcmp(protocol, "SAMSUNG32")) {
-        return SAMSUNG32;
-    } else if(!strcmp(protocol, "SAMSUNG48")) {
-        return SAMSUNG48;
-    }else if(!strcmp(protocol, "PANASONIC")) {
-        return PANASONIC;
-    }
+    for (size_t i = 0; i < NUM_OF_PROTOCOLS; i++) {
+        if(!strcmp(protocol, PROTOCOLS_NAMES[i])) return i;
+    }    
     return -1;
 }
 char* numtoprotocolname(int n) {
-    switch (n)
-    {
-        case NEC:
-            return "NEC";
-        break;
-
-        case KASEIKYO:
-            return "KASEIKYO";
-        break;
-
-        case LG:
-            return "LG";
-        break;
-
-        case SAMSUNG32:
-            return "SAMSUNG32";
-        break;
-
-        case SAMSUNG48:
-            return "SAMSUNG48";
-        break;
-
-        case PANASONIC:
-            return "PANASONIC";
-        break;
-        
-        default:
-            return "UNKNOWN";
-        break;
+    if(n < NUM_OF_PROTOCOLS){
+        return PROTOCOLS_NAMES[n];
     }
+    return "UNKNOWN";
 }
 
 void printhelp(const char* filename) {
@@ -141,6 +115,21 @@ int main(int argc, char *argv[])
 
     if (!strcmp(argv[2], "-A")) {
         if(argc == 7) {
+            if(protocolnametonum(argv[4]) == -1) {
+                printf("\n Invalid protocol name!");
+                printf(" Please use one of the following : \n");
+                for (uint8_t i = 0; i < NUM_OF_PROTOCOLS; i++) {
+                    printf(" %s,", numtoprotocolname(i));
+                }
+                printf("\b \n");
+                fclose(code);
+                return -1;
+            }
+            if (strlen(argv[3]) > 8) {
+                printf(" ERROR! Code name can't exceed 8 characters!");
+                fclose(code);
+                return -1;
+            }
             fseek(code, 0, SEEK_SET);
             fread(&numofcodes, 4, 1, code);
             numofcodes = swap_endian_32(numofcodes);
@@ -152,8 +141,8 @@ int main(int argc, char *argv[])
             write.command = strtol(argv[6], NULL, 0);
             printf("\n Name : %s", write.name);
             printf("\n Protocol : %s", numtoprotocolname(write.protocol));
-            printf("\n Address : %x", write.address);
-            printf("\n Command : %x", write.command);
+            printf("\n Address : 0x%X", write.address);
+            printf("\n Command : 0x%X", write.command);
             write.address = swap_endian_32(write.address);
             write.command = swap_endian_32(write.command);
             fseek(code, 0, SEEK_END);
@@ -187,8 +176,8 @@ int main(int argc, char *argv[])
                 printf("\n Code %d", i);
                 printf("\n Name : %s", code_array[i].name);
                 printf("\n Protocol : %s", numtoprotocolname(code_array[i].protocol));
-                printf("\n Address : %x", swap_endian_32(code_array[i].address));
-                printf("\n Command : %x\n", swap_endian_32(code_array[i].command));
+                printf("\n Address : 0x%X", swap_endian_32(code_array[i].address));
+                printf("\n Command : 0x%X\n", swap_endian_32(code_array[i].command));
             } 
         }
         
