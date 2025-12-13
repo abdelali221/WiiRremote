@@ -1,6 +1,16 @@
 #include "protocols.h"
 #include "IR.h"
 
+char *PROTOCOLS_NAMES[NUM_OF_PROTOCOLS] = {
+    "NEC",
+    "KASEIKYO",
+    "LG",
+    "SAMSUNG32",
+    "SAMSUNG48",
+    "PANASONIC",
+    "RC5"
+};
+
 extern void usleep(u32 s);
 
 void SEND_NEC(IR_data IR) {
@@ -205,34 +215,8 @@ void GET_PROTOCOL_AND_SEND(IR_data IR) {
 }
 
 char* ID_TO_PROTOCOL_NAME(int n) {
-    switch (n)
-    {
-        case NEC:
-            return "NEC";
-        break;
-
-        case KASEIKYO:
-            return "KASEIKYO";
-        break;
-
-		case PANASONIC:
-            return "PANASONIC";
-        break;
-
-        case LG:
-            return "LG";
-        break;
-
-        case SAMSUNG32:
-            return "SAMSUNG32";
-        break;
-
-        case SAMSUNG48:
-            return "SAMSUNG48";
-        break;
-        
-        default:
-            return "UNKNOWN";
-        break;
-    }
+	if(n < NUM_OF_PROTOCOLS) {
+		return PROTOCOLS_NAMES[n];
+	}
+	return "UNKNOWN";
 }

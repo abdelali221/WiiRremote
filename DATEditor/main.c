@@ -1,5 +1,5 @@
 /*
-    DATEditor v0.1
+    DATEditor v0.3
     Created by Abdelali221
 */
 
@@ -30,7 +30,8 @@ enum protocols {
     LG,
     SAMSUNG32,
     SAMSUNG48,
-    PANASONIC
+    PANASONIC,
+    RC5
 };
 
 char *PROTOCOLS_NAMES[6] = {
@@ -39,7 +40,8 @@ char *PROTOCOLS_NAMES[6] = {
     "LG",
     "SAMSUNG32",
     "SAMSUNG48",
-    "PANASONIC\0"
+    "PANASONIC",
+    "RC5"
 };
 
 uint32_t swap_endian_32(uint32_t val) {
