@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <gccore.h>
 #include <wiiuse/wpad.h>
 #include <fat.h>
@@ -7,6 +8,7 @@
 #include "WiiVT.h"
 #include "IR.h"
 #include "protocols.h"
+#include "TUI.h"
 
 #define VER "v0.3"
 
@@ -16,7 +18,16 @@ extern void usleep(u32 s);
 static void *xfb = NULL;
 static GXRModeObj *rmode = NULL;
 
+void printTopbar() {
+    POSCursor(0, 0);
+    
+    printf("%s%*c%s%s%*c", WHITE_BG_BLACK_FG, 35 - ((strlen("WiiRremote ") + strlen(VER)) / 2), ' ', "WiiRremote ", VER, 41 - ((strlen("WiiRremote") + strlen(VER)) / 2), ' ');
+
+    printf("%s", DEFAULT_BG_FG);
+}
+
 void PRINT_CODE_INFO(IR_data* IR, u32 currentcode) {
+	printTopbar();
 	POSCursor(25, 4);
 	printf("Using Code %d", currentcode);
 	POSCursor(25, 6);
@@ -30,6 +41,8 @@ void PRINT_CODE_INFO(IR_data* IR, u32 currentcode) {
 }
 
 int main(int argc, char **argv) {
+
+	ENABLE_IR(false);
 
 	VIDEO_Init();
 
@@ -123,10 +136,10 @@ int main(int argc, char **argv) {
 		if ( pressed & WPAD_BUTTON_HOME ) break;
 
 		if ( pressed & WPAD_BUTTON_A ) { 
-			GET_PROTOCOL_AND_SEND(IR_codes[currentcode]);
+			GET_PROTOCOL_AND_SEND(&IR_codes[currentcode]);
 			POSCursor(30, 10);
 			printf("Sent data! ");
-			usleep(1000000);
+			usleep(200000);
 			ClearScreen();
 			PRINT_CODE_INFO(&IR_codes[currentcode], currentcode);
 		}
