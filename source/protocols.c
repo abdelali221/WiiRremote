@@ -1,3 +1,31 @@
+/*
+ *  protocols.c, based on Arduino-IRremote.
+ *
+ *  Contains functions for sending multiple IR Protocols
+ *
+ *  This file is part of WiiRremote https://github.com/Abdelali221/WiiRremote.
+ *
+ ************************************************************************************
+ * GPL-3.0 License
+ * 
+ * Copyright (c) 2017-2025 Darryl Smith, Armin Joachimsmeyer
+ * Copyright (c) 2017-2023 Kristian Lauszus
+ * Copyright (c) 2025 B.Abdelali
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+ * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+ * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ ************************************************************************************
+ */
+
+
 #include "protocols.h"
 #include "IR.h"
 
@@ -13,7 +41,7 @@ char *PROTOCOLS_NAMES[NUM_OF_PROTOCOLS] = {
 
 extern void usleep(u32 s);
 
-void SEND_NEC(IR_data IR) {
+void SEND_NEC(IR_data *IR) {
 	SET_SETTINGS(11, 11, 1650, 550, 50, 50);
 
 	for (size_t i = 0; i < 165; i++)
@@ -21,35 +49,35 @@ void SEND_NEC(IR_data IR) {
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
 	usleep(4500);
-	if (IR.address < 0x100) {
+	if (IR->address < 0x100) {
 		for (u8 i = 0; i < 8; i++)
 		{
-			SEND_BIT(((IR.address >> i) & 1) ? 0 : 1);
+			SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
 		}
 		for (u8 i = 0; i < 8; i++)
 		{
-			SEND_BIT(((IR.address >> i) & 1) ? 1 : 0);
+			SEND_BIT(((IR->address >> i) & 1) ? 1 : 0);
 		}
 	} else {
 		for (u8 i = 0; i < 16; i++)
 		{
-			SEND_BIT(((IR.address >> i) & 1) ? 0 : 1);
+			SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
 		}
 	}
 
-    if (IR.command < 0x100) {
+    if (IR->command < 0x100) {
 		for (u8 i = 0; i < 8; i++)
 		{
-			SEND_BIT(((IR.command >> i) & 1) ? 0 : 1);
+			SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
 		}
 		for (u8 i = 0; i < 8; i++)
 		{
-			SEND_BIT(((IR.command >> i) & 1) ? 1 : 0);
+			SEND_BIT(((IR->command >> i) & 1) ? 1 : 0);
 		}
 	} else {
 		for (u8 i = 0; i < 16; i++)
 		{
-			SEND_BIT(((IR.command >> i) & 1) ? 0 : 1);
+			SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
 		}
 	}
 
@@ -60,7 +88,7 @@ void SEND_NEC(IR_data IR) {
 	
 }
 
-void SEND_SAMSUNG(IR_data IR, bool _32_48) {
+void SEND_SAMSUNG(IR_data *IR, bool _32_48) {
 	SET_SETTINGS(11, 11, 1575, 525, 50, 50);
 
     for (size_t i = 0; i < 80; i++)
@@ -71,12 +99,12 @@ void SEND_SAMSUNG(IR_data IR, bool _32_48) {
 
     for (u8 i = 0; i < 16; i++)
 	{
-		SEND_BIT(((IR.address >> i) & 1) ? 0 : 1);
+		SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
 	}
 
     for (u8 i = 0; i < 16; i++)
 	{
-		SEND_BIT(((IR.command >> i) & 1) ? 0 : 1);
+		SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
 	}
 }
 
@@ -90,11 +118,11 @@ u8 reverse_bits(u8 byte) {
     return reversed_byte;
 }
 
-void SEND_KASEIKYO(IR_data IR, u16 VENDOR_ID) {
+void SEND_KASEIKYO(IR_data *IR, u16 VENDOR_ID) {
     SET_SETTINGS(9, 9, 8 * 3 * 50, 9 * 50, 50, 50);
 
-	u8 addr = IR.address;
-	u8 cmd = IR.command;
+	u8 addr = IR->address;
+	u8 cmd = IR->command;
 
 	u8 tdata[6] = {0};
 
@@ -128,9 +156,6 @@ void SEND_KASEIKYO(IR_data IR, u16 VENDOR_ID) {
 	}
 }
 
-
-/*
-
 uint32_t computeLGRawDataAndChecksum(uint8_t aAddress, uint16_t aCommand) {
     uint32_t tRawData = ((uint32_t) aAddress << (LG_COMMAND_BITS + LG_CHECKSUM_BITS)) | ((uint32_t) aCommand << LG_CHECKSUM_BITS);
  
@@ -143,50 +168,55 @@ uint32_t computeLGRawDataAndChecksum(uint8_t aAddress, uint16_t aCommand) {
     return (tRawData | (tChecksum & 0xF));
 }
 
+void SEND_LG(IR_data *IR) {
+	SET_SETTINGS(11, 11, 1575, 525, 50, 50);
 
-void sendlg(IR_data *IR) {
-	l_0 = 11; // 11 * 50 = 550
-	s_0 = 21 * 3 * 25; // 33 * 50 =
-	l_1 = 11;
-	s_1 = 21 * 25;
+	u32 data = computeLGRawDataAndChecksum(IR->address, IR->command);
 
-
-	u32 data = 0xE0E019E6;
-
-	printf("\n ADDR : ");
-	for (size_t i = 0; i < 15; i++)
-	{
-		printf("%d", ((IR->address >> i) & 1));
-		
-	}
-	printf("\n CMD : ");
-	for (size_t i = 0; i < 15; i++)
-	{
-		printf("%d", ((IR->command >> i) & 1));
-		
-	}
-	for (size_t i = 0; i < 190; i++)
+	for (size_t i = 0; i < 165; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
-	
-	usleep(4500);
+	usleep(4150);
 
 	for (size_t i = 0; i < 28; i++)
 	{
-		SEND_BIT((data >> (27 - i)) & 1);		
+		SEND_BIT(((data >> (27 - i)) & 1) ? 0 : 1);		
 	}
 
-	for (size_t i = 0; i < 22; i++)
+	for (size_t i = 0; i < 9; i++)
+	{
+		PWM_IR(true, false, PULSE_TIME, 50);
+	}	
+}
+
+void SEND_JVC(IR_data *IR) {
+	SET_SETTINGS(11, 11, 1575, 525, 50, 50);
+
+	for (size_t i = 0; i < 165; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
-	
-}
-*/
 
-void GET_PROTOCOL_AND_SEND(IR_data IR) {
-    switch (IR.protocol)
+	usleep(4150);
+
+	for (u8 i = 0; i < 8; i++)
+	{
+		SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
+	}
+
+    for (u8 i = 0; i < 8; i++)
+	{
+		SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
+	}
+	for (size_t i = 0; i < 9; i++)
+	{
+		PWM_IR(true, false, PULSE_TIME, 50);
+	}
+}
+
+void GET_PROTOCOL_AND_SEND(IR_data *IR) {
+    switch (IR->protocol)
     {
         case NEC:
             SEND_NEC(IR);
@@ -207,6 +237,10 @@ void GET_PROTOCOL_AND_SEND(IR_data IR) {
 		case SAMSUNG48:
             SEND_SAMSUNG(IR, 1);
         break;
+
+		case LG:
+			SEND_LG(IR);
+		break;
     
         default:
         break;
