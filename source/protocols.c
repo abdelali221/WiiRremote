@@ -91,20 +91,56 @@ void SEND_NEC(IR_data *IR) {
 void SEND_SAMSUNG(IR_data *IR, bool _32_48) {
 	SET_SETTINGS(11, 11, 1575, 525, 50, 50);
 
-    for (size_t i = 0; i < 80; i++)
+    for (size_t i = 0; i < 82; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
-	usleep(4500);
+	usleep(4450);
+	if(!_32_48) {
+		if (IR->address < 0x100) {
+			for (u8 i = 0; i < 8; i++)
+			{
+				SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
+			}
+			for (u8 i = 0; i < 8; i++)
+			{
+				SEND_BIT(((IR->address >> i) & 1) ? 1 : 0);
+			}
+		} else {
+			for (u8 i = 0; i < 16; i++)
+			{
+				SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
+			}
+		}
+		if (IR->command < 0x100) {
+			for (u8 i = 0; i < 8; i++)
+			{
+				SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
+			}
+			for (u8 i = 0; i < 8; i++)
+			{
+				SEND_BIT(((IR->command >> i) & 1) ? 1 : 0);
+			}
+		} else {
+			for (u8 i = 0; i < 16; i++)
+			{
+				SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
+			}
+		}
+	} else {
+		for (u8 i = 0; i < 16; i++)
+		{
+			SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
+		}
 
-    for (u8 i = 0; i < 16; i++)
-	{
-		SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
+		for (u8 i = 0; i < 32; i++)
+		{
+			SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
+		}
 	}
-
-    for (u8 i = 0; i < 16; i++)
+	for (size_t i = 0; i < 11; i++)
 	{
-		SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
+		PWM_IR(true, false, PULSE_TIME, 50);
 	}
 }
 
@@ -240,6 +276,10 @@ void GET_PROTOCOL_AND_SEND(IR_data *IR) {
 
 		case LG:
 			SEND_LG(IR);
+		break;
+
+		case JVC:
+			SEND_JVC(IR);
 		break;
     
         default:

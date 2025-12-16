@@ -10,7 +10,7 @@
 #include <windows.h>
 
 #define VER "v0.3"
-#define NUM_OF_PROTOCOLS 6
+#define NUM_OF_PROTOCOLS 8
 
 void POSCursor(uint8_t X, uint8_t Y) {
 	printf("\x1b[%d;%dH", Y, X);
@@ -31,10 +31,11 @@ enum protocols {
     SAMSUNG32,
     SAMSUNG48,
     PANASONIC,
-    RC5
+    RC5,
+    JVC
 };
 
-char *PROTOCOLS_NAMES[6] = {
+char *PROTOCOLS_NAMES[NUM_OF_PROTOCOLS] = {
     "NEC",
     "KASEIKYO",
     "LG",

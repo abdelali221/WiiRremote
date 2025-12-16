@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
 		if ( pressed & WPAD_BUTTON_A ) { 
 			GET_PROTOCOL_AND_SEND(&IR_codes[currentcode]);
 			POSCursor(30, 10);
-			printf("Sent data! ");
+			printf("Sent data!");
 			usleep(200000);
 			ClearScreen();
 			PRINT_CODE_INFO(&IR_codes[currentcode], currentcode);
