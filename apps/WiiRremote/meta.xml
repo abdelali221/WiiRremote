@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
 	<name>WiiRremote</name>
-	<version>v0.3</version>
+	<version>v0.4</version>
 	<release_date>20251212000000</release_date>
 	<coder>Abdelali221</coder>
 	<short_description>Use your Wii as a remote control!</short_description>
