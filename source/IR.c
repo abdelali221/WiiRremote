@@ -1,42 +1,42 @@
+/*
+   IR.c
+
+   Copyright (C) 2025 B. Abdelali.
+
+   This file is part of WiiRremote : https://github.com/abdelali221/WiiRremote.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <gccore.h>
 
-extern void usleep(u32 s);
-
-static vu32* const _ipcReg = (u32*)0xCD000000;	
-
 u32 PULSE_TIME = 26399;
 
-u32 ACR_ReadReg(u32 reg)
-{
-	return _ipcReg[reg>>2];
-}
-
-void ACR_WriteReg(u32 reg,u32 val)
-{
-	_ipcReg[reg>>2] = val;
-}
-
-void ENABLE_IR(bool enable) {
-	u32 val;
-	u32 level;
-
-	level = IRQ_Disable();
-	val = (ACR_ReadReg(0xc0)&~0x100);
-	if(enable) val |= 0x100;
-	ACR_WriteReg(0xc0,val);
-	IRQ_Restore(level);
-}
+extern void usleep(u32 s);
+extern void __wiiuse_sensorbar_enable(int enable);
 
 void PWM_IR(bool start, bool end, u32 time, u8 width) {
 	struct timespec req = {0};
     struct timespec rem;
 
 	req.tv_nsec = time - ((time*width)/100);
-	ENABLE_IR(start);
+	__wiiuse_sensorbar_enable(start);
 	nanosleep(&req, &rem);
-	ENABLE_IR(end);
+	__wiiuse_sensorbar_enable(end);
 	req.tv_nsec = time + ((time*width)/100);
 	nanosleep(&req, &rem);
 }

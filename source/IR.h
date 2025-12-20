@@ -6,7 +6,6 @@
 
 extern u32 PULSE_TIME;
 
-void ENABLE_IR(bool enable);
 void SET_SETTINGS(u16 l_0, u16 l_1, u16 s_0, u16 s_1, u16 dc_0, u16 dc_1);
 void SET_PULSE_TIME(u32 t);
 void SEND_BIT(bool bit);

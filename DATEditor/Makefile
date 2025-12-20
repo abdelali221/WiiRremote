@@ -1,8 +1,9 @@
-CC = c:\mingw-w64-7.0.0-i686\mingw32\bin\gcc.exe
+CC = gcc
 CFLAGS = -Wall -Werror -O2
+TARGET = DATEditor
 
 all: main.o
-	$(CC) -o dateditor main.o
+	$(CC) -o $(TARGET) main.o
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c main.c
@@ -11,4 +12,4 @@ main.o: main.c
 .PHONY: clean
 
 clean:
-	-rm -f *.o *.exe
+	-rm -f *.o $(TARGET)

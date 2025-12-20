@@ -1,15 +1,30 @@
 /*
-    DATEditor v0.3
-    Created by Abdelali221
+   DATEditor v0.4
+
+   Copyright (C) 2025 B. Abdelali
+
+   This file is part of WiiRremote : https://github.com/abdelali221/WiiRremote.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <windows.h>
 
-#define VER "v0.3"
+#define VER "v0.4"
 #define NUM_OF_PROTOCOLS 8
 
 void POSCursor(uint8_t X, uint8_t Y) {
@@ -35,14 +50,15 @@ enum protocols {
     JVC
 };
 
-char *PROTOCOLS_NAMES[NUM_OF_PROTOCOLS] = {
+char *PROTOCOLS_NAMES[] = {
     "NEC",
     "KASEIKYO",
     "LG",
     "SAMSUNG32",
     "SAMSUNG48",
     "PANASONIC",
-    "RC5"
+    "RC5",
+    "JVC"
 };
 
 uint32_t swap_endian_32(uint32_t val) {
@@ -176,7 +192,7 @@ int main(int argc, char *argv[])
             fread(code_array, sizeof(IR_data), numofcodes, code);
             for (size_t i = 0; i < numofcodes; i++)
             {
-                printf("\n Code %d", i);
+                printf("\n Code %ld", i);
                 printf("\n Name : %s", code_array[i].name);
                 printf("\n Protocol : %s", numtoprotocolname(code_array[i].protocol));
                 printf("\n Address : 0x%X", swap_endian_32(code_array[i].address));
