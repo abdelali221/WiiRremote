@@ -29,14 +29,15 @@
 #include "protocols.h"
 #include "IR.h"
 
-char *PROTOCOLS_NAMES[NUM_OF_PROTOCOLS] = {
+char *PROTOCOLS_NAMES[] = {
     "NEC",
     "KASEIKYO",
     "LG",
     "SAMSUNG32",
     "SAMSUNG48",
     "PANASONIC",
-    "RC5"
+    "RC5",
+	"JVC"
 };
 
 extern void usleep(u32 s);
@@ -104,7 +105,7 @@ void SEND_SAMSUNG(IR_data *IR, bool _32_48) {
 			}
 			for (u8 i = 0; i < 8; i++)
 			{
-				SEND_BIT(((IR->address >> i) & 1) ? 1 : 0);
+				SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
 			}
 		} else {
 			for (u8 i = 0; i < 16; i++)

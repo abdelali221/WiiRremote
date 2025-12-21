@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
         printf("\n Creating file...");
         code = fopen("codes.dat", "wb");
         fwrite(&numofcodes, 4, 1, code);
-        printf("Success!");
+        printf("Success!\n");
         return 0;
     } else {
         printf("\n Opening file...");
