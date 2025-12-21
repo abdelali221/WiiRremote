@@ -1,5 +1,5 @@
 /*
-   DATEditor v0.4
+   WiiRremote - main.c
 
    Copyright (C) 2025 B. Abdelali.
 
