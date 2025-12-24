@@ -145,34 +145,13 @@ void SEND_SAMSUNG(IR_data *IR, bool _32_48) {
 	}
 }
 
-u8 reverse_bits(u8 byte) {
-    uint8_t reversed_byte = 0;
-    for (int i = 0; i < 8; i++) {
-        if ((byte >> i) & 1) {
-            reversed_byte |= (1 << (7 - i));
-        }
-    }
-    return reversed_byte;
-}
-
 void SEND_KASEIKYO(IR_data *IR, u16 VENDOR_ID) {
     SET_SETTINGS(9, 9, 8 * 3 * 50, 9 * 50, 50, 50);
 
-	u8 addr = IR->address;
-	u8 cmd = IR->command;
-
-	u8 tdata[6] = {0};
-
-	tdata[0] = (u8)(VENDOR_ID & 0xFF);
-	tdata[1] = (u8)(VENDOR_ID >> 8);
 	uint8_t tVendorParity = VENDOR_ID ^ (VENDOR_ID >> 8);
     tVendorParity = (tVendorParity ^ (tVendorParity >> 4)) & 0xF;
 
-	tdata[2] = reverse_bits((u8)(((addr << KASEIKYO_VENDOR_ID_PARITY_BITS) | tVendorParity) && 0xFF));
-	tdata[3] = reverse_bits((u8)(((addr << KASEIKYO_VENDOR_ID_PARITY_BITS) | tVendorParity) >> 8));
-
-	tdata[4] = cmd;
-	tdata[5] = tdata[4] ^ tdata[2] ^ tdata[3];
+	u8 parity = IR->command ^ (u8)((((IR->address) << KASEIKYO_VENDOR_ID_PARITY_BITS) | tVendorParity) & 0xFF) ^ (u8)((((IR->address) << KASEIKYO_VENDOR_ID_PARITY_BITS) | tVendorParity) >> 8);
 
 	for (size_t i = 0; i < 63; i++)
 	{
@@ -180,13 +159,24 @@ void SEND_KASEIKYO(IR_data *IR, u16 VENDOR_ID) {
 	}
 
 	usleep(1700);
-	for (size_t j = 0; j < 6; j++) {
-		for (size_t i = 0; i < 8; i++)
-		{
-			SEND_BIT((((tdata[j] >> i) & 1) ? 0 : 1));
-		}
-	}
 
+	for (size_t i = 0; i < 16; i++)
+	{
+		SEND_BIT((((VENDOR_ID >> i) & 1) ? 0 : 1));
+	}
+	for (size_t i = 0; i < 16; i++)
+	{
+		SEND_BIT(((((((IR->address) << KASEIKYO_VENDOR_ID_PARITY_BITS) | tVendorParity) >> i) & 1) ? 0 : 1));
+	}
+	for (size_t i = 0; i < 8; i++)
+	{
+		SEND_BIT((((IR->command >> i) & 1) ? 0 : 1));
+	}
+	for (size_t i = 0; i < 8; i++)
+	{
+		SEND_BIT((((parity >> i) & 1) ? 0 : 1));
+	}
+	
 	for (size_t i = 0; i < 9; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
@@ -278,11 +268,11 @@ void GET_PROTOCOL_AND_SEND(IR_data *IR) {
 		case LG:
 			SEND_LG(IR);
 		break;
-
+		
 		case JVC:
 			SEND_JVC(IR);
 		break;
-    
+		
         default:
         break;
     }
