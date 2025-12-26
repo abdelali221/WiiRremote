@@ -4,9 +4,7 @@ Use your Wii sensor bar as a remote control!
 
 # How to use :
 
-The app requires a code file (codes.dat) which you neeed to create using the tool I provided (DATEditor).
-
-DATEditor is currently only available for Windows.
+The app requires a code file (codes.dat) which you neeed to create using the tool provided (DATEditor).
 
 Make sure to use the correct protocol when creating a code.
 
