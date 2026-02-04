@@ -12,6 +12,11 @@ When you get the codes.dat file ready, put it in the same folder as the .dol fil
 
 Note: The app requires both a real console and a wired ir bar, otherwise it won't work.
 
+# Important :
+
+This app is just a proof of concept, which means it's not made to be easy to use!
+
+
 # Credits :
 
 - [The Arduino-IRremote library](https://github.com/Arduino-IRremote/Arduino-IRremote/).
