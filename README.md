@@ -1,6 +1,6 @@
 # WiiRremote
 
-Use your Wii sensor bar as a remote control!
+Use your Wii sensor bar as an IR blaster!
 
 # How to use :
 
