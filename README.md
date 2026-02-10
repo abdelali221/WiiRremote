@@ -20,3 +20,5 @@ This app is just a proof of concept, which means it's not made to be easy to use
 # Credits :
 
 - [The Arduino-IRremote library](https://github.com/Arduino-IRremote/Arduino-IRremote/).
+
+Software brought to you by Abdelali221.
