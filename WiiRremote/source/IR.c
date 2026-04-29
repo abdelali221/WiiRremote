@@ -1,7 +1,7 @@
 /*
    IR.c
 
-   Copyright (C) 2025 B. Abdelali.
+   Copyright (C) 2025-2026 Abdelali221
 
    This file is part of WiiRremote : https://github.com/abdelali221/WiiRremote.
 
@@ -23,21 +23,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gccore.h>
+#include "IR.h"
 
-u32 PULSE_TIME = 26399;
+u32 PULSE_TIME = F_38_4KHz;
 
 extern void usleep(u32 s);
 extern void __wiiuse_sensorbar_enable(int enable);
+struct timespec req = {0};
+struct timespec rem;
 
-void PWM_IR(bool start, bool end, u32 time, u8 width) {
-	struct timespec req = {0};
-    struct timespec rem;
-
-	req.tv_nsec = time - ((time*width)/100);
+inline void PWM_IR(bool start, bool end, u32 time, u8 width) {
+	req.tv_nsec = (time - ((time*width)/100))/2;
 	__wiiuse_sensorbar_enable(start);
 	nanosleep(&req, &rem);
 	__wiiuse_sensorbar_enable(end);
-	req.tv_nsec = time + ((time*width)/100);
+	req.tv_nsec = (time + ((time*width)/100))/2;
 	nanosleep(&req, &rem);
 }
 
@@ -62,7 +62,7 @@ void SET_SETTINGS(u16 l_0, u16 l_1, u16 s_0, u16 s_1, u16 dc_0, u16 dc_1) {
     dutycycle_1 = dc_1;
 }
 
-void SEND_BIT(bool bit) {
+inline void SEND_BIT(bool bit) {
 	if (bit) {
 		for (size_t i = 0; i < length_1; i++)
 		{

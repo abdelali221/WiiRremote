@@ -1,7 +1,7 @@
 /*
    WiiRremote - main.c
 
-   Copyright (C) 2025 B. Abdelali.
+   Copyright (C) 2025-2026 Abdelali221
 
    This file is part of WiiRremote : https://github.com/abdelali221/WiiRremote.
 
@@ -31,7 +31,7 @@
 #include "protocols.h"
 #include "TUI.h"
 
-#define VER "v0.4"
+#define VER "v0.5"
 
 extern void usleep(u32 s);
 extern void __wiiuse_sensorbar_enable(int enable);
@@ -42,7 +42,7 @@ static GXRModeObj *rmode = NULL;
 void printTopbar() {
     POSCursor(0, 0);
     
-    printf("%s%*c%s%s%*c", WHITE_BG_BLACK_FG, 35 - ((strlen("WiiRremote ") + strlen(VER)) / 2), ' ', "WiiRremote ", VER, 41 - ((strlen("WiiRremote") + strlen(VER)) / 2), ' ');
+    printf("%s%*c%s%s%*c", WHITE_BG_BLACK_FG, 35 - ((strlen("WiiRremote ") + strlen(VER)) / 2), ' ', "WiiRremote ", VER, 39 - ((strlen("WiiRremote") + strlen(VER)) / 2), ' ');
 
     printf("%s", DEFAULT_BG_FG);
 }
@@ -145,15 +145,11 @@ int main(int argc, char **argv) {
 	ClearScreen();
 	u32 currentcode = 0;
 	PRINT_CODE_INFO(&IR_codes[currentcode], currentcode);
+	
 	while(1) {
-		// Call WPAD_ScanPads each loop, this reads the latest controller states
 		WPAD_ScanPads();
-
-		// WPAD_ButtonsDown tells us which buttons were pressed in this loop
-		// this is a "one shot" state which will not fire again until the button has been released
 		u32 pressed = WPAD_ButtonsDown(0);
 
-		// We return to the launcher application via exit
 		if ( pressed & WPAD_BUTTON_HOME ) break;
 
 		if ( pressed & WPAD_BUTTON_A ) { 
@@ -174,9 +170,8 @@ int main(int argc, char **argv) {
 		if ( pressed & WPAD_BUTTON_MINUS ) { 
 			if (0 < currentcode) currentcode--;
 			ClearScreen();
-			PRINT_CODE_INFO(&IR_codes[currentcode], currentcode);
+			PRINT_CODE_INFO(&IR_codes[currentcode], currentcode);	
 		}
-		
 	}
 	free(IR_codes);
 	return 0;

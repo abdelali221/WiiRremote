@@ -7,7 +7,7 @@
   
    Copyright (c) 2017-2025 Darryl Smith, Armin Joachimsmeyer
    Copyright (c) 2017-2023 Kristian Lauszus
-   Copyright (c) 2025 B. Abdelali
+   Copyright (C) 2025-2026 Abdelali221
   
    This file is part of WiiRremote : https://github.com/abdelali221/WiiRremote.
 
@@ -28,6 +28,7 @@
 
 #include "protocols.h"
 #include "IR.h"
+#include <ogc/machine/processor.h>
 
 char *PROTOCOLS_NAMES[] = {
     "NEC",
@@ -37,15 +38,16 @@ char *PROTOCOLS_NAMES[] = {
     "SAMSUNG48",
     "PANASONIC",
     "RC5",
-	"JVC"
+	"JVC", 
+	"SONY"
 };
 
 extern void usleep(u32 s);
 
 void SEND_NEC(IR_data *IR) {
-	SET_SETTINGS(11, 11, 1650, 550, 50, 50);
+	SET_SETTINGS(21, 21, 1687, 562, 50, 50);
 
-	for (size_t i = 0; i < 165; i++)
+	for (size_t i = 0; i < 340; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
@@ -90,9 +92,9 @@ void SEND_NEC(IR_data *IR) {
 }
 
 void SEND_SAMSUNG(IR_data *IR, bool _32_48) {
-	SET_SETTINGS(11, 11, 1575, 525, 50, 50);
+	SET_SETTINGS(21, 21, 1575, 525, 50, 50);
 
-    for (size_t i = 0; i < 82; i++)
+    for (size_t i = 0; i < 164; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
@@ -139,14 +141,14 @@ void SEND_SAMSUNG(IR_data *IR, bool _32_48) {
 			SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
 		}
 	}
-	for (size_t i = 0; i < 11; i++)
+	for (size_t i = 0; i < 21; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
 }
 
 void SEND_KASEIKYO(IR_data *IR, u16 VENDOR_ID) {
-    SET_SETTINGS(9, 9, 8 * 3 * 50, 9 * 50, 50, 50);
+    SET_SETTINGS(18, 18, 8 * 3 * 50, 9 * 50, 50, 50);
 
 	uint8_t tVendorParity = VENDOR_ID ^ (VENDOR_ID >> 8);
     tVendorParity = (tVendorParity ^ (tVendorParity >> 4)) & 0xF;
@@ -177,7 +179,7 @@ void SEND_KASEIKYO(IR_data *IR, u16 VENDOR_ID) {
 		SEND_BIT((((parity >> i) & 1) ? 0 : 1));
 	}
 	
-	for (size_t i = 0; i < 9; i++)
+	for (size_t i = 0; i < 18; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
@@ -196,11 +198,11 @@ uint32_t computeLGRawDataAndChecksum(uint8_t aAddress, uint16_t aCommand) {
 }
 
 void SEND_LG(IR_data *IR) {
-	SET_SETTINGS(11, 11, 1575, 525, 50, 50);
+	SET_SETTINGS(21, 21, 1575, 525, 50, 50);
 
 	u32 data = computeLGRawDataAndChecksum(IR->address, IR->command);
 
-	for (size_t i = 0; i < 165; i++)
+	for (size_t i = 0; i < 340; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}
@@ -211,14 +213,14 @@ void SEND_LG(IR_data *IR) {
 		SEND_BIT(((data >> (27 - i)) & 1) ? 0 : 1);		
 	}
 
-	for (size_t i = 0; i < 9; i++)
+	for (size_t i = 0; i < 18; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
 	}	
 }
 
 void SEND_JVC(IR_data *IR) {
-	SET_SETTINGS(11, 11, 1575, 525, 50, 50);
+	SET_SETTINGS(21, 21, 1575, 525, 50, 50);
 
 	for (size_t i = 0; i < 165; i++)
 	{
@@ -236,9 +238,27 @@ void SEND_JVC(IR_data *IR) {
 	{
 		SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
 	}
-	for (size_t i = 0; i < 9; i++)
+	for (size_t i = 0; i < 18; i++)
 	{
 		PWM_IR(true, false, PULSE_TIME, 50);
+	}
+}
+
+void SEND_SONY(IR_data *IR) {
+	SET_SETTINGS(46, 23, 450, 450, 50, 50);
+
+	for (size_t i = 0; i < 90; i++)
+	{
+		PWM_IR(true, false, PULSE_TIME, 50);
+	}
+	usleep(600);
+	for (u8 i = 0; i < 7; i++)
+	{
+		SEND_BIT(((IR->command >> i) & 1) ? 0 : 1);
+	}
+	for (u8 i = 0; i < 5; i++)
+	{
+		SEND_BIT(((IR->address >> i) & 1) ? 0 : 1);
 	}
 }
 
@@ -272,11 +292,14 @@ void GET_PROTOCOL_AND_SEND(IR_data *IR) {
 		case JVC:
 			SEND_JVC(IR);
 		break;
+
+		case SONY:
+			SEND_SONY(IR);
+		break;
 		
         default:
         break;
     }
-    
 }
 
 char* ID_TO_PROTOCOL_NAME(int n) {

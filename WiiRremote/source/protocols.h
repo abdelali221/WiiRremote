@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <gccore.h>
 
-#define NUM_OF_PROTOCOLS 8
+#define NUM_OF_PROTOCOLS 9
 
 enum protocols {
     NEC,
@@ -15,7 +15,8 @@ enum protocols {
     SAMSUNG48,
     PANASONIC,
     RC5,
-    JVC
+    JVC,
+    SONY
 };
 
 #define KASEIKYO_VENDOR_ID_PARITY_BITS   4
