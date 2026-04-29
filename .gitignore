@@ -1,12 +1,12 @@
-WiiRremote.dol
-WiiRremote.elf
-build/*.*
+WiiRremote/WiiRremote.dol
+WiiRremote/WiiRremote.elf
+WiiRremote/build/*.*
 DATEditor/.vscode/launch.json
 DATEditor/host.exe
 DATEditor/main.o
 DATEditor/codes.dat
-WiiRremote.zip
-apps/WiiRremote/boot.dol
+WiiRremote/WiiRremote.zip
+WiiRremote/apps/WiiRremote/boot.dol
 DATEditor/DATEditor-Windows-i686.exe
 DATEditor/dateditor.exe
 DATEditor/DATEditor
