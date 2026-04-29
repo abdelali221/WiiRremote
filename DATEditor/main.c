@@ -1,7 +1,7 @@
 /*
-   DATEditor v0.4
+   DATEditor v0.5
 
-   Copyright (C) 2025 B. Abdelali
+   Copyright (C) 2025-2026 Abdelali221
 
    This file is part of WiiRremote : https://github.com/abdelali221/WiiRremote.
 
@@ -24,8 +24,8 @@
 #include <string.h>
 #include <stdint.h>
 
-#define VER "v0.4"
-#define NUM_OF_PROTOCOLS 8
+#define VER "v0.5"
+#define NUM_OF_PROTOCOLS 9
 
 void POSCursor(uint8_t X, uint8_t Y) {
 	printf("\x1b[%d;%dH", Y, X);
@@ -47,7 +47,8 @@ enum protocols {
     SAMSUNG48,
     PANASONIC,
     RC5,
-    JVC
+    JVC,
+    SONY
 };
 
 char *PROTOCOLS_NAMES[] = {
@@ -58,15 +59,9 @@ char *PROTOCOLS_NAMES[] = {
     "SAMSUNG48",
     "PANASONIC",
     "RC5",
-    "JVC"
+    "JVC",
+    "SONY"
 };
-
-uint32_t swap_endian_32(uint32_t val) {
-    return ((val << 24) & 0xFF000000) |
-           ((val << 8)  & 0x00FF0000) |
-           ((val >> 8)  & 0x0000FF00) |
-           ((val >> 24) & 0x000000FF);
-}
 
 int protocolnametonum(char* protocol) {
     for (size_t i = 0; i < NUM_OF_PROTOCOLS; i++) {
@@ -84,12 +79,13 @@ char* numtoprotocolname(int n) {
 void printhelp(const char* filename) {
     printf("\n\n Usage : %s (\"PATH_TO_CODES.DAT\" or -C) Arguments\n", filename);
     printf("\n  -A : Add a code");
-    printf("\n  -R : Read the file (use only if a proper path was given)\n");
+    printf("\n  -D : Delete a code");
+    printf("\n  -R : Read the file (use only if a proper path was given)\n\n");
 }
 
 void printaddhelp(const char* filename) {
     printf("\n\n Please follow this structure when adding a code :\n");
-    printf(" %s \"FILEPATH\" -A (NAME) (PROTOCOL) (ADDRESS) (CODE)\n", filename);
+    printf(" %s \"FILEPATH\" -A (NAME) (PROTOCOL) (ADDRESS) (CODE)\n\n", filename);
 }
 
 int main(int argc, char *argv[])
@@ -151,7 +147,7 @@ int main(int argc, char *argv[])
             }
             fseek(code, 0, SEEK_SET);
             fread(&numofcodes, 4, 1, code);
-            numofcodes = swap_endian_32(numofcodes);
+            numofcodes = __builtin_bswap32(numofcodes);
             printf("\n Adding code :\n");
             IR_data write = {0};
             strcpy(write.name, argv[3]);
@@ -162,13 +158,13 @@ int main(int argc, char *argv[])
             printf("\n Protocol : %s", numtoprotocolname(write.protocol));
             printf("\n Address : 0x%X", write.address);
             printf("\n Command : 0x%X", write.command);
-            write.address = swap_endian_32(write.address);
-            write.command = swap_endian_32(write.command);
+            write.address = __builtin_bswap32(write.address);
+            write.command = __builtin_bswap32(write.command);
             fseek(code, 0, SEEK_END);
             fwrite(&write, 1, sizeof(IR_data), code);
             fseek(code, 0, SEEK_SET);
             numofcodes++;
-            numofcodes = swap_endian_32(numofcodes);
+            numofcodes = __builtin_bswap32(numofcodes);
             fwrite(&numofcodes, 4, 1, code);
             printf("\n\n Done.");
         } else if (argc < 7) {
@@ -178,33 +174,67 @@ int main(int argc, char *argv[])
             printf("\n Too Many Arguments.");
             printaddhelp(argv[0]);
         }
-    }
-    
-    if (!strcmp(argv[2], "-R")) {
+    } else if (!strcmp(argv[2], "-R")) {
         printf("\n Reading the file header...");
         fseek(code, 0, SEEK_SET);
         fread(&numofcodes, 4, 1, code);
 
-        numofcodes = swap_endian_32(numofcodes);
+        numofcodes = __builtin_bswap32(numofcodes);
         if (strcmp(argv[1], "-C") && numofcodes > 0) {
             printf(" %d codes are available\n", numofcodes);
-                IR_data* code_array = calloc(sizeof(IR_data), numofcodes);
+            IR_data* code_array = calloc(sizeof(IR_data), numofcodes);
             fread(code_array, sizeof(IR_data), numofcodes, code);
             for (size_t i = 0; i < numofcodes; i++)
             {
                 printf("\n Code %ld", i);
                 printf("\n Name : %s", code_array[i].name);
                 printf("\n Protocol : %s", numtoprotocolname(code_array[i].protocol));
-                printf("\n Address : 0x%X", swap_endian_32(code_array[i].address));
-                printf("\n Command : 0x%X\n", swap_endian_32(code_array[i].command));
+                printf("\n Address : 0x%X", __builtin_bswap32(code_array[i].address));
+                printf("\n Command : 0x%X\n", __builtin_bswap32(code_array[i].command));
             } 
         }
         
         if (numofcodes == 0) {
             printf(" There are no codes to be read!");
         }
+    } else if (!strcmp(argv[2], "-D")) {
+        if(argc == 4) {
+            printf("\n Reading the file header...");
+            fseek(code, 0, SEEK_SET);
+            fread(&numofcodes, 4, 1, code);
+            numofcodes = __builtin_bswap32(numofcodes);
+            printf("%d codes are available", numofcodes);
+            uint32_t codetoremove = strtol(argv[3], NULL, 0);;
+            
+            if(codetoremove < numofcodes && codetoremove >= 0) {
+                IR_data *IR_codes = calloc(numofcodes, sizeof(IR_data));
+                fread(IR_codes, sizeof(IR_data), numofcodes, code);
+                fclose(code);
+                printf("\n Removing code %d...", codetoremove);
+                code = fopen(argv[1], "wb+");
+                numofcodes--;
+                numofcodes = __builtin_bswap32(numofcodes);
+                fwrite(&numofcodes, 4, 1, code);
+                numofcodes = __builtin_bswap32(numofcodes);
+                for(size_t i = 0;i < codetoremove; i++) {
+                    fwrite(&IR_codes[i], 1, sizeof(IR_data), code);
+                }
+                for(size_t i = codetoremove + 1; i <= numofcodes; i++) {
+                    fwrite(&IR_codes[i], 1, sizeof(IR_data), code);
+                }
+                
+                
+                printf("Done.");
+            }
+        } else if (argc < 4) {
+            printf("\n Too Few Arguments.");
+            //printremovehelp(argv[0]);
+        } else {
+            printf("\n Too Many Arguments.");
+            //printremovehelp(argv[0]);
+        }
     }
-
+    printf("\n");
     fclose(code);
     return 0;
 }
